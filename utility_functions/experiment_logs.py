@@ -25,7 +25,8 @@ class PCGExperimentLogger:
         path_ = path + '/'
         cnn_path = path_ + cnn_prefix + str(fold)
         model.load_weights(cnn_path)
-        return model, np.load(path_ + 'p_states_fold_' + str(fold) + '.npy'), np.load(path_ + 'trans_mat_fold_' + str(fold) + '.npy')
+        return model, np.load(path_ + 'p_states_fold_' + str(fold) + '.npy'), np.load(
+            path_ + 'trans_mat_fold_' + str(fold) + '.npy')
 
     def save_model_checkpoints(self, model, p_states, trans_mat, checkpoint_path, fold):
         self.last_checkpoint = self.path + '/' + checkpoint_path + str(fold)
@@ -61,3 +62,15 @@ class PCGExperimentLogger:
         sio.savemat(path_ + 'ground_truth.mat',
                     {'ground_truth': self.out_ground_truth_cell})
         sio.savemat(path_ + 'viterbi.mat', {'viterbi': self.out_vit_seq_cell})
+
+
+def checkpoint_model_at_fold(*, val_loss, min_val_loss, best_p_states, best_trans_mat, experiment_logger, loss_object, model, fold):
+    val_loss_ = min_val_loss
+    if val_loss < min_val_loss:
+        val_loss_ = val_loss
+        # SAVE MODEL
+        best_p_states = loss_object.p_states.numpy()
+        best_trans_mat = loss_object.trans_mat.numpy()
+        experiment_logger.save_model_checkpoints(model, best_p_states, best_trans_mat, '/cnn_weights_fold_',
+                                                 fold)
+    return val_loss_, best_p_states, best_trans_mat

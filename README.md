@@ -2,7 +2,7 @@
 A joint end-to-end learning framework for Hybrid HMM-DNN models
 
 ## Requisites
-The user should have Python 3.8 installed.
+The user should have Python 3.8.10 installed.
 
 ## Requirements
 One should create a python or conda virtual environment using the provided requirements.txt file
