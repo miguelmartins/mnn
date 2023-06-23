@@ -426,6 +426,16 @@ def train_HMM_parameters(labels_arr, one_hot=True):
     return p_states, trans_mat
 
 
+def hmm_mle(dataset, loss_object):
+    dataset_np = list(dataset.as_numpy_iterator())
+    dataset = np.array(dataset_np, dtype=object)
+    labels_ = dataset[:, 1]
+    _, trans_mat = train_HMM_parameters(labels_)
+    p_states = QR_steady_state_distribution(trans_mat)
+    loss_object.trans_mat.assign(tf.Variable(trans_mat, trainable=True, dtype=tf.float32))
+    loss_object.p_states.assign(tf.Variable(p_states, trainable=True, dtype=tf.float32))
+
+
 def hmm_single_observation(labels_cat):
     p_states = np.zeros((4,))
     trans_mat = np.zeros((4, 4))
