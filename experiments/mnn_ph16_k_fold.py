@@ -32,10 +32,10 @@ number_folders = args.number_folders
 learning_rate = args.learning_rate
 
 if args.hybrid:
-    train_step_fn = hmm_train_step_nn_only
+    train_step_fn = hmm_train_step
     logging.info('Using hybrid training.')
 else:
-    train_step_fn = hmm_train_step
+    train_step_fn = hmm_train_step_nn_only
     logging.info('Using static training.')
 
 mnn_type = 'HYBRID' if args.hybrid else 'STATIC'

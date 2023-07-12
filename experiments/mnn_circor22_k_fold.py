@@ -32,10 +32,10 @@ number_folders = args.number_folders
 learning_rate = args.learning_rate
 
 if args.hybrid:
-    train_step_fn = hmm_train_step_nn_only
+    train_step_fn = hmm_train_step
     logging.info('Using hybrid training.')
 else:
-    train_step_fn = hmm_train_step
+    train_step_fn = hmm_train_step_nn_only
     logging.info('Using static training.')
 
 mnn_type = 'HYBRID' if args.hybrid else 'STATIC'
@@ -126,7 +126,7 @@ def main():
             metrics[0].reset_states()
             for i, (x_train, y_train) in tqdm(enumerate(train_dataset), desc=f'training', total=len(X_train),
                                               leave=True):
-                hmm_train_step_nn_only(model=model,
+                train_step_fn(model=model,
                                        optimizer=optimizer_nn,
                                        loss_object=loss_object,
                                        train_batch=x_train,
