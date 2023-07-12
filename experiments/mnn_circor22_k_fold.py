@@ -8,11 +8,11 @@ from tqdm import tqdm
 from data_processing.signal_extraction import CircorExtractor
 from data_processing.data_transformation import HybridPCGDataPreparer, prepare_validation_data, get_train_test_indices
 from custom_train_functions.hmm_train_step import hmm_train_step, hmm_train_step_nn_only, hmm_mle
-from loss_functions.mnn_losses import MMILoss, CompleteLikelihoodLoss
+from loss_functions.mnn_losses import CompleteLikelihoodLoss
 from models.custom_models import simple_convnet
 from utility_functions.experiment_logs import PCGExperimentLogger, checkpoint_model_at_fold
 
-from utility_functions.hmm_utilities import log_viterbi_no_marginal, QR_steady_state_distribution
+from utility_functions.hmm_utilities import log_viterbi_no_marginal
 from utility_functions.parsing import get_supervised_parser
 
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +23,6 @@ nch = 4
 parser = get_supervised_parser()
 args = parser.parse_args()
 
-#parser.add_argument(mnn)
 num_epochs = args.number_epochs
 number_folders = args.number_folders
 learning_rate = args.learning_rate
@@ -37,39 +36,33 @@ else:
 
 mnn_type = 'HYBRID' if args.hybrid else 'STATIC'
 NAME = f'CIRCOR22_MNN_{mnn_type}_{number_folders}fold_{num_epochs}ep_{learning_rate}lr'
+
+
 def main():
-# Read Circor #
     good_indices, features, labels, patient_ids = CircorExtractor.read_from_np(
         '../datasets/springer_circor_dataset.npy',
         patch_size=patch_size)
-    ######
 
     experiment_logger = PCGExperimentLogger(path='../results/', name=NAME, number_folders=number_folders)
     logging.info('Total number of valid sounds with length > ' +
                  str(patch_size / 50) +
                  ' seconds: ' + str(len(good_indices)))
-    # 1) save files on a given directory, maybe experiment-name/date/results
-    # 2) save model weights (including random init, maybe  experiment-name/date/checkpoints
+
     model = simple_convnet(nch, patch_size)
     loss_object = CompleteLikelihoodLoss(tf.Variable(tf.zeros((4, 4)), trainable=True, dtype=tf.float32),
                                          tf.Variable(tf.zeros((4,)), trainable=True, dtype=tf.float32))
     optimizer_nn = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer=optimizer_nn, loss=loss_object, metrics=['categorical_accuracy'])
     model.save_weights('random_init')  # Save initialization before training
-
-    acc_folds, prec_folds = [], []
     for fold in range(number_folders):
+        logging.info(f'Considering folder number: {fold + 1}')
+
         min_val_loss = 1e100
         model.load_weights('random_init')  # Load random weights f.e. fold
         train_indices, test_indices = get_train_test_indices(good_indices=good_indices,
                                                              number_folders=number_folders,
                                                              patient_ids=patient_ids,
                                                              fold=fold)
-
-        # remove from training data sounds that are from patient appearing in the testing set
-
-        logging.info(f'Considering folder number: {fold + 1}')
-        # This ia residual code from the initial implementation, kept for "panicky" reasons
 
         features_train = features[train_indices]
         features_test = features[test_indices]
@@ -124,11 +117,11 @@ def main():
             for i, (x_train, y_train) in tqdm(enumerate(train_dataset), desc=f'training', total=len(X_train),
                                               leave=True):
                 train_step_fn(model=model,
-                                       optimizer=optimizer_nn,
-                                       loss_object=loss_object,
-                                       train_batch=x_train,
-                                       label_batch=y_train,
-                                       metrics=metrics)
+                              optimizer=optimizer_nn,
+                              loss_object=loss_object,
+                              train_batch=x_train,
+                              label_batch=y_train,
+                              metrics=metrics)
 
             # check performance at each epoch
             (val_loss, val_acc) = model.evaluate(dev_dataset, verbose=0)
@@ -175,8 +168,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # We use the cpu as our device as computation of P(O, S) and P(O)
-    # is usually more efficient given the restriction of batch size of 1
-    with tf.device('/cpu:0'):
-        main()
-
+    main()

@@ -8,11 +8,11 @@ from tqdm import tqdm
 from data_processing.signal_extraction import DataExtractor
 from data_processing.data_transformation import HybridPCGDataPreparer, prepare_validation_data, get_train_test_indices
 from custom_train_functions.hmm_train_step import hmm_train_step, hmm_mle, hmm_train_step_nn_only
-from loss_functions.mnn_losses import MMILoss, CompleteLikelihoodLoss
+from loss_functions.mnn_losses import CompleteLikelihoodLoss
 from models.custom_models import simple_convnet
 from utility_functions.experiment_logs import PCGExperimentLogger, checkpoint_model_at_fold
 from utility_functions.parsing import get_supervised_parser
-from utility_functions.hmm_utilities import log_viterbi_no_marginal, QR_steady_state_distribution
+from utility_functions.hmm_utilities import log_viterbi_no_marginal
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,7 +22,6 @@ nch = 4
 parser = get_supervised_parser()
 args = parser.parse_args()
 
-#parser.add_argument(mnn)
 num_epochs = args.number_epochs
 number_folders = args.number_folders
 learning_rate = args.learning_rate
@@ -36,14 +35,16 @@ else:
 
 mnn_type = 'HYBRID' if args.hybrid else 'STATIC'
 NAME = f'PH16_MNN_{mnn_type}_{number_folders}fold_{num_epochs}ep_{learning_rate}lr'
+
+
 def main():
     good_indices, features, labels, patient_ids, length_sounds = DataExtractor.extract(path='../datasets/'
                                                                                             '/PhysioNet_SpringerFeatures_Annotated_featureFs_50_Hz_audio_ForPython.mat',
                                                                                        patch_size=patch_size)
     experiment_logger = PCGExperimentLogger(path='../results/', name=NAME, number_folders=number_folders)
-    logging.info('Total number of valid sounds with length > ' + str(patch_size / 50) + ' seconds: ' + str(len(good_indices)))
-    # 1) save files on a given directory, maybe experiment-name/date/results
-    # 2) save model weights (including random init, maybe  experiment-name/date/checkpoints
+    logging.info(
+        'Total number of valid sounds with length > ' + str(patch_size / 50) + ' seconds: ' + str(len(good_indices)))
+
     model = simple_convnet(nch, patch_size)
     loss_object = CompleteLikelihoodLoss(tf.Variable(tf.zeros((4, 4)), trainable=True, dtype=tf.float32),
                                          tf.Variable(tf.zeros((4,)), trainable=True, dtype=tf.float32))
@@ -53,15 +54,12 @@ def main():
     model.save_weights('random_init')  # Save initialization before training
 
     for fold in range(number_folders):
+        logging.info(f'Considering folder number: {fold + 1}')
         model.load_weights('random_init')  # Load random weights f.e. fold
         train_indices, test_indices = get_train_test_indices(good_indices=good_indices,
                                                              number_folders=number_folders,
                                                              patient_ids=patient_ids,
                                                              fold=fold)
-
-        # remove from training data sounds that are from patient appearing in the testing set
-
-        logging.info(f'Considering folder number: {fold + 1}')
 
         features_train = features[train_indices]
         features_test = features[test_indices]
@@ -112,7 +110,7 @@ def main():
         min_val_loss = 1e3
         for ep in range(num_epochs):
             for i, (x_train, y_train) in tqdm(enumerate(train_dataset),
-                                              desc=f'training epoch {ep+1}/{num_epochs}',
+                                              desc=f'training epoch {ep + 1}/{num_epochs}',
                                               total=len(X_train),
                                               leave=True):
                 train_step_fn(model=model,
