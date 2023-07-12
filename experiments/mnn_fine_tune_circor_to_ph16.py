@@ -4,24 +4,16 @@ import os
 import h5py
 import numpy as np
 import tensorflow as tf
-import sys
-from tempfile import mkdtemp
-
-import os.path as path
-from sklearn.metrics import accuracy_score, precision_score
-from sklearn.model_selection import train_test_split
 
 from data_processing.signal_extraction import DataExtractor, CircorExtractor
-from data_processing.data_transformation import HybridPCGDataPreparer2D, \
-    prepare_validation_data, get_train_test_indices, HybridPCGDataPreparer
+from data_processing.data_transformation import prepare_validation_data, get_train_test_indices, HybridPCGDataPreparer
 from tqdm import tqdm
-from custom_train_functions.hmm_train_step import hmm_train_step, train_HMM_parameters, hmm_train_step_markov_only, \
-    hmm_single_observation, hmm_train_step_nn_only
-from loss_functions.mnn_losses import CompleteLikelihoodLoss, ForwardLoss
-from models.custom_models import simple_convnet2d, simple_convnet
+from custom_train_functions.hmm_train_step import hmm_train_step, hmm_train_step_nn_only
+from loss_functions.mnn_losses import ForwardLoss
+from models.custom_models import simple_convnet
 from utility_functions.experiment_logs import PCGExperimentLogger
 
-from utility_functions.hmm_utilities import log_viterbi_no_marginal, QR_steady_state_distribution
+from utility_functions.hmm_utilities import log_viterbi_no_marginal
 from utility_functions.parsing import get_fine_tune_parser
 
 BASE_PATH = '../pretrained_models/circor_pretrain/'

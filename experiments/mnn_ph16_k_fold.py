@@ -1,11 +1,7 @@
-import argparse
 import numpy as np
 import tensorflow as tf
 import logging
 
-
-
-from sklearn.metrics import accuracy_score, precision_score
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
