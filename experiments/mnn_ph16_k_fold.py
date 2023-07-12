@@ -1,5 +1,9 @@
+import argparse
 import numpy as np
 import tensorflow as tf
+import logging
+
+
 
 from sklearn.metrics import accuracy_score, precision_score
 from sklearn.model_selection import train_test_split
@@ -11,28 +15,37 @@ from custom_train_functions.hmm_train_step import hmm_train_step, hmm_mle, hmm_t
 from loss_functions.MMI_losses import MMILoss, CompleteLikelihoodLoss
 from models.custom_models import simple_convnet
 from utility_functions.experiment_logs import PCGExperimentLogger, checkpoint_model_at_fold
-
+from utility_functions.parsing import get_supervised_parser
 from utility_functions.hmm_utilities import log_viterbi_no_marginal, QR_steady_state_distribution
+
+logging.basicConfig(level=logging.INFO)
 
 patch_size = 64
 nch = 4
-num_epochs = 50
-number_folders = 10
-learning_rate = 1e-3
-mnn_type = "STATIC"  # Either STATIC or HYBRID
-if mnn_type == 'STATIC':
+
+parser = get_supervised_parser()
+args = parser.parse_args()
+
+#parser.add_argument(mnn)
+num_epochs = args.number_epochs
+number_folders = args.number_folders
+learning_rate = args.learning_rate
+
+if args.hybrid:
     train_step_fn = hmm_train_step_nn_only
+    logging.info('Using hybrid training.')
 else:
     train_step_fn = hmm_train_step
+    logging.info('Using static training.')
 
-
+mnn_type = 'HYBRID' if args.hybrid else 'STATIC'
+NAME = f'PH16_MNN_{mnn_type}_{number_folders}fold_{num_epochs}ep_{learning_rate}lr'
 def main():
-    good_indices, features, labels, patient_ids, length_sounds = DataExtractor.extract(path='../datasets/PCG'
+    good_indices, features, labels, patient_ids, length_sounds = DataExtractor.extract(path='../datasets/'
                                                                                             '/PhysioNet_SpringerFeatures_Annotated_featureFs_50_Hz_audio_ForPython.mat',
                                                                                        patch_size=patch_size)
-    name = "hmm_hybrid_cl_env_physio16"
-    experiment_logger = PCGExperimentLogger(path='../results/rerun/hybrid', name=name, number_folders=number_folders)
-    print('Total number of valid sounds with length > ' + str(patch_size / 50) + ' seconds: ' + str(len(good_indices)))
+    experiment_logger = PCGExperimentLogger(path='../results/', name=NAME, number_folders=number_folders)
+    logging.info('Total number of valid sounds with length > ' + str(patch_size / 50) + ' seconds: ' + str(len(good_indices)))
     # 1) save files on a given directory, maybe experiment-name/date/results
     # 2) save model weights (including random init, maybe  experiment-name/date/checkpoints
     model = simple_convnet(nch, patch_size)
@@ -43,9 +56,7 @@ def main():
     model.compile(optimizer=optimizer_nn, loss=loss_object, metrics=['categorical_accuracy'])
     model.save_weights('random_init')  # Save initialization before training
 
-    acc_folds, prec_folds = [], []
     for fold in range(number_folders):
-        min_val_loss = 1e3
         model.load_weights('random_init')  # Load random weights f.e. fold
         train_indices, test_indices = get_train_test_indices(good_indices=good_indices,
                                                              number_folders=number_folders,
@@ -54,7 +65,7 @@ def main():
 
         # remove from training data sounds that are from patient appearing in the testing set
 
-        print('Considering folder number:', fold + 1)
+        logging.info(f'Considering folder number: {fold + 1}')
 
         features_train = features[train_indices]
         features_test = features[test_indices]
@@ -62,8 +73,8 @@ def main():
         labels_train = labels[train_indices]
         labels_test = labels[test_indices]
 
-        print('Number of training sounds:', len(labels_train))
-        print('Number of testing sounds:', len(labels_test))
+        logging.info(f'Number of training sounds: {len(labels_train)}')
+        logging.info(f'Number of testing sounds: {len(labels_test)}')
 
         X_train, X_dev, y_train, y_dev = train_test_split(
             features_train, labels_train, test_size=0.1, random_state=42)
@@ -99,13 +110,13 @@ def main():
         # Checkpointing initilization
         best_p_states = loss_object.p_states.numpy()
         best_trans_mat = loss_object.trans_mat.numpy()
-        min_val_loss = 1e3
         experiment_logger.save_model_checkpoints(model, best_p_states, best_trans_mat, '/cnn_weights_fold_', fold)
 
         train_dataset = train_dataset.shuffle(len(X_train), reshuffle_each_iteration=True)
+        min_val_loss = 1e3
         for ep in range(num_epochs):
             for i, (x_train, y_train) in tqdm(enumerate(train_dataset),
-                                              desc=f'training',
+                                              desc=f'training epoch {ep+1}/{num_epochs}',
                                               total=len(X_train),
                                               leave=True):
                 train_step_fn(model=model,
@@ -130,47 +141,25 @@ def main():
         model = experiment_logger.load_model_checkpoint_weights(model)
         loss_object.p_states.assign(tf.Variable(best_p_states, trainable=True, dtype=tf.float32))
         loss_object.trans_mat.assign(tf.Variable(best_trans_mat, trainable=True, dtype=tf.float32))
-        out_test = model.predict(test_dataset)
-        accuracy, precision = [], []
 
-        labels_list, predictions_list = [], []
-        print(loss_object.p_states.numpy())
-        print(loss_object.trans_mat.numpy())
 
         # Viterbi algorithm in test set
+        labels_list, predictions_list = [], []
         for x, y in tqdm(test_dataset, desc=f'validating (viterbi)', total=len(labels_test), leave=True):
             logits = model.predict(x)
             y = y.numpy()
-            _, _, predictions = log_viterbi_no_marginal(loss_object.p_states.numpy(), loss_object.trans_mat.numpy(),
+            _, _, predictions = log_viterbi_no_marginal(loss_object.p_states.numpy(),
+                                                        loss_object.trans_mat.numpy(),
                                                         logits)
             predictions = predictions.astype(np.int32)
             raw_labels = np.argmax(y, axis=1).astype(np.int32)
             predictions_list.append(predictions)
             labels_list.append(raw_labels)
-            acc = accuracy_score(raw_labels, predictions)
-            prc = precision_score(raw_labels, predictions, average=None)
-            accuracy.append(acc)
-            precision.append(prc)
-        print("Mean Test Accuracy: ", np.mean(accuracy), "Mean Test Precision: ", np.mean(precision))
-        acc_folds.append(np.mean(acc))
-        prec_folds.append(np.mean(prc))
-        length_sounds_test = np.zeros(len(features_test))
-        for j in range(len(features_test)):
-            length_sounds_test[j] = len(features_test[j])
 
         # recover sound labels from patch labels
-        output_probs, output_seqs = prepare_validation_data(out_test, test_indices, length_sounds_test)
-
-        sample_acc = np.zeros((len(labels_test),))
-        for j in range(len(labels_test)):
-            sample_acc[j] = 1 - (np.sum((output_seqs[j] != labels_test[j] - 1).astype(int)) / len(labels_test[j]))
-
-        print('Test mean sample accuracy for this folder:', np.sum(sample_acc) / len(sample_acc))
-        for j in range(len(labels_test)):
-            sample_acc[j] = 1 - (
-                    np.sum((predictions_list[j] != labels_test[j] - 1).astype(int)) / len(labels_test[j]))
-        print("Viterbi: ", np.sum(sample_acc) / len(sample_acc))
-
+        out_test = model.predict(test_dataset)
+        length_sounds_test = np.array([len(ft) for ft in features_test])
+        _, output_seqs = prepare_validation_data(out_test, test_indices, length_sounds_test)
         # collecting data and results
         experiment_logger.update_results(fold=fold,
                                          train_indices=train_indices,
@@ -184,5 +173,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # We use the cpu as our device as computation of P(O, S) and P(O)
+    # is usually more efficient given the restriction of batch size of 1
     with tf.device('/cpu:0'):
         main()
