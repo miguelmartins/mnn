@@ -366,7 +366,6 @@ def simple_convnet(nch, patch_size):
     dense3 = Dense(4, activation='softmax')(dense1)
 
     model = Model(inputs=[inputs], outputs=[dense3])
-    model.summary()
     return model
 
 
