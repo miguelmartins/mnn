@@ -17,7 +17,7 @@ from data_processing.data_transformation import HybridPCGDataPreparer2D, \
 from tqdm import tqdm
 from custom_train_functions.hmm_train_step import hmm_train_step, train_HMM_parameters, hmm_train_step_markov_only, \
     hmm_single_observation, hmm_train_step_nn_only
-from loss_functions.MMI_losses import CompleteLikelihoodLoss, ForwardLoss
+from loss_functions.mnn_losses import CompleteLikelihoodLoss, ForwardLoss
 from models.custom_models import simple_convnet2d, simple_convnet
 from utility_functions.experiment_logs import PCGExperimentLogger
 

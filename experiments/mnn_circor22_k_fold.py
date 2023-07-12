@@ -11,7 +11,7 @@ from data_processing.signal_extraction import DataExtractor, CircorExtractor
 from data_processing.data_transformation import HybridPCGDataPreparer, prepare_validation_data, get_train_test_indices
 from custom_train_functions.hmm_train_step import hmm_train_step, train_HMM_parameters, hmm_train_step_multi_opt, \
     hmm_train_step_nn_only, hmm_mle
-from loss_functions.MMI_losses import MMILoss, CompleteLikelihoodLoss
+from loss_functions.mnn_losses import MMILoss, CompleteLikelihoodLoss
 from models.custom_models import simple_convnet
 from utility_functions.experiment_logs import PCGExperimentLogger, checkpoint_model_at_fold
 
