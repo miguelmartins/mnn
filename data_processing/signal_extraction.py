@@ -1,6 +1,7 @@
 import os
 
 import librosa
+import logging
 import numpy as np
 import scipy.io as sio
 import scipy.signal
@@ -324,7 +325,7 @@ class DataExtractor:
                         noisy_indices.append(valid_indices[idx])
 
             valid_indices = np.array(list(set(valid_indices) - set(noisy_indices)))
-            print(f"Filtered {len(set(noisy_indices))} observations containing noisy labels")
+            logging.info(f"Filtered {len(set(noisy_indices))} observations containing noisy labels")
         features = raw_features[valid_indices]
         labels = raw_labels[valid_indices]
         patient_ids = raw_patient_ids[valid_indices]
