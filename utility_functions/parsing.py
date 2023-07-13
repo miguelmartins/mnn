@@ -52,7 +52,8 @@ def get_fine_tune_parser(default_model_dir: str):
                         '--model_directory',
                         type=str,
                         default=default_model_dir,
-                        help='The relative path where the MNN\'s pre-trained weights are stored. Uses weights of the models reported in IEEE JBHI publication as default.')
+                        help='The relative path where the MNN\'s pre-trained weights are stored. Defaults to a MNN '
+                             'pre-trained in the CirCor\'22 dataset.')
 
     parser.add_argument('--ph16',
                         action='store_true',
