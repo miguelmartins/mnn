@@ -130,6 +130,6 @@ Comparison of static MNN optimized for the complete likelihood with the HSMM by 
 
 ### Unsupervised
 ### Fine-tuning from CirCor'22 to PhysioNet'16
-Initialization using the parameters $\Phi_0$ attained after training in the PhysioNet'16. 
-Relative improvement of parametrization $\Phi_i$, attained after $0 \leq i \leq 20$ rounds of fine-tuning to the CirCor'22 dataset.
+Initialization using the parameters $\Psi_0$ attained after training in the PhysioNet'16. 
+Relative improvement of parametrization $\Psi_i$, attained after $0 \leq i \leq 20$ rounds of fine-tuning to the CirCor'22 dataset.
 ![plot](./figures/rel_circor.png)
