@@ -8,7 +8,7 @@ MNN leveraging a simple one-dimensional Convolutional ANN that significantly
 outperforms two recent purely data-driven solutions for the task of fundamental 
 heart sound segmentation in two publicly available datasets: 
 [PhysioNet 2016 challenge dataset](https://archive.physionet.org/pn3/challenge/2016/) (Sensitivity: $0.947 \pm 0.02$; Positive Predictive Value: $0.937 \pm 0.025$)
-and [CirCor DigiScope PhysioNet 2022 challenge dataset](https://moody-challenge.physionet.org/2022/) dataset (Sensitivity: $0.950 \pm 0.008$; Positive Predictive Value: $0.943 \pm 0.012$) datasets. 
+and [CirCor DigiScope PhysioNet 2022 challenge dataset](https://moody-challenge.physionet.org/2022/) (Sensitivity: $0.950 \pm 0.008$; Positive Predictive Value: $0.943 \pm 0.012$). 
 
 We also introduce a gradient-based unsupervised fine-tuning algorithm that effectively makes the MNN adaptive to unseen datum sampled from unknown distributions. We show that a pre-trained MNN can learn to fit an entirely new dataset in an unsupervised fashion with remarkable gains in performance.
 ![plot](figures/Flowchart_color.png)
@@ -37,9 +37,9 @@ We provide files with the datasets processed as described in Section III-A of th
 
 Each observation is band-passed using [25, 400] Hz, downsampled to 1000 Hz, and its spikes are then procedurally removed. 
 
-Finally, each signal is processed into 4 channels spanning i) the _homeomorphic_ envelogram, ii) the _Hilbert_ envelope, iii) the _Wavelet_ envelope, and iv) the _power spectral density_ envelope.
+Finally, each signal is processed into 4 channels spanning i) the _homeomorphic_ envelogram, ii) the _Hilbert_ envelope, iii) the _Wavelet_ envelope, and iv) the _Power Spectral Density_ envelope.
 
-These features were extracted by adapting the approach previously published by [Springer _et al_](https://physionet.org/content/hss/1.0/). Dataset loading and processing utilies are available under the `data_processing` module.
+These features were extracted by adapting the approach previously published by [Springer _et al_](https://physionet.org/content/hss/1.0/) [1]. Dataset loading and processing utilies are available under the `data_processing` module.
 
 
 ## Running experiments 
@@ -120,7 +120,7 @@ The experiments will be logged in a `.hdf5` file that will contain, for each fol
 
 ## Measured Results
 ### Supervised
-Comparison of static MNN optimized for the complete likelihood with the HSMM by Springer _et al._, the U-Net by Renna _et al., and the Bi-LSTM+A by Fernando _et al._.
+Comparison of static MNN optimized for the complete likelihood with the HSMM by Springer _et al. [1], the U-Net by Renna _et al. [2], and the Bi-LSTM+A by Fernando _et al._ [3].
 #### 10-fold cross-validation PhysioNet'16
 
 ![plot](./figures/boxplot_models_ph16.png)
@@ -134,5 +134,13 @@ Initialization using the parameters $\Psi_0$ attained after training in the Phys
 Relative improvement of parametrization $\Psi_i$, attained after $0 \leq i \leq 20$ rounds of fine-tuning to the CirCor'22 dataset.
 
 <p>
-    <img src="figures/rel_circor.png" width="1000" height="560" />
+    <img src="figures/rel_circor.png" width="1000" height="400" />
 </p>
+
+
+## References
+[1] Springer DB, Tarassenko L, Clifford GD. Logistic regression-HSMM-based heart sound segmentation. IEEE transactions on biomedical engineering. 2015 Sep 1;63(4):822-32.
+
+[2] Renna F, Oliveira J, Coimbra MT. Deep convolutional neural networks for heart sound segmentation. IEEE journal of biomedical and health informatics. 2019 Jan 20;23(6):2435-45.
+
+[3] Fernando T, Ghaemmaghami H, Denman S, Sridharan S, Hussain N, Fookes C. Heart sound segmentation using bidirectional LSTMs with attention. IEEE journal of biomedical and health informatics. 2019 Oct 25;24(6):1601-9.
