@@ -11,6 +11,7 @@ heart sound segmentation in two publicly available datasets:
 and [CirCor DigiScope PhysioNet 2022 challenge dataset](https://moody-challenge.physionet.org/2022/) dataset (Sensitivity: $0.950 \pm 0.008$; Positive Predictive Value: $0.943 \pm 0.012$) datasets. 
 
 We also introduce a gradient-based unsupervised fine-tuning algorithm that effectively makes the MNN adaptive to unseen datum sampled from unknown distributions. We show that a pre-trained MNN can learn to fit an entirely new dataset in an unsupervised fashion with remarkable gains in performance.
+![plot](figures/Flowchart_color.png)
 
 ## Recommended requirements
 1. Use anaconda/miniconda to create a __python 3.8.10__ virtual environment:
@@ -78,14 +79,57 @@ The experimental logs will contain, for each fold:
 
 
 ## Cross-dataset unsupervised fine-tuning 
+The [cross-dataset fine-tuning python script](experiments/mnn_fine_tune.py) allows
+to load a pre-trained MNN and fine-tuned it to PhysioNet'16/CirCor'22 dataset. 
+se an argument parser so that the experiments can be configurable by the user:
 
+```console
+usage: mnn_fine_tune.py [-h] [-k NUMBER_FOLDERS] [-e NUMBER_EPOCHS]
+                        [-lr LEARNING_RATE] [-d MODEL_DIRECTORY] [--ph16]
+                        [--circor22] [--hybrid] [--no-hybrid]
 
-## Contribution
-Each feature should be preferably implemented in a short-lived branch.
-Commit messages should should follow these rules:
-  * Seperate subject from body by an empty line
-  * Subject should be no longer than 50 characters
-  * The body should be no longer than 75 characters as often as possible
-  * Use imperitive mood in title/subject of the commit
-  * New features should have their purpose clearly stated in the body
-  * Changes in packages should be reflected in requirements.txt, following lexographic order
+optional arguments:
+  -h, --help            show this help message and exit
+  -k NUMBER_FOLDERS, --number_folders NUMBER_FOLDERS
+                        The number k of folds for cross-validation. Defaults
+                        to 10.
+  -e NUMBER_EPOCHS, --number-epochs NUMBER_EPOCHS
+                        The number of train epochs per fold. Defaults to 50.
+  -lr LEARNING_RATE, --learning_rate LEARNING_RATE
+                        The learning rate for the Adam gradient descent
+                        optimizer. Defaults to 1e-3.
+  -d MODEL_DIRECTORY, --model_directory MODEL_DIRECTORY
+                        The relative path where the MNN's pre-trained weights
+                        are stored. Defaults to a MNN pre-trained in the CirCor'22 dataset.
+  --ph16                Fine-tune to PhysioNet'16. Default option.
+  --circor22            Fine-tune to CirCor'22.
+  --hybrid              Use hybrid training. Script defaults to this mode.
+  --no-hybrid           Use static training. Overrides default hybrid
+                        training.
+```
+
+If no optional arguments are provided, 
+the experiment will load a pretrained model in CirCor'22 and fine-tune to the PhysioNet'16 dataset as described in Section IV-C.3 of the IEEE JBHI publication.
+
+We provide two pre-trained model weights for the MNN baseline initialization under `pretrained_models/circor_pretrain` and `pretrained_models/ph16_pretrain.`
+
+The experiments will be logged in a `.hdf5` file that will contain, for each fold, for each fine-tuning round:
+* The indices used to partition the fold into __train/val/test__.
+* The MNN's segmentation proposals (`predictions`)
+* The ground truth state labels (`ground_truth`)
+
+## Measured Results
+### Supervised
+Comparison of static MNN optimized for the complete likelihood with the HSMM by Springer _et al._, the U-Net by Renna _et al., and the Bi-LSTM+A by Fernando _et al._.
+#### 10-fold cross-validation PhysioNet'16
+
+![plot](./figures/boxplot_models_ph16.png)
+
+#### 10-fold cross-validation CirCor'22
+![plot](./figures/boxplot_models_circor.png)
+
+### Unsupervised
+### Fine-tuning from CirCor'22 to PhysioNet'16
+Initialization using the parameters $\Phi_0$ attained after training in the PhysioNet'16. 
+Relative improvement of parametrization $\Phi_i$, attained after $0 \leq i \leq 20$ rounds of fine-tuning to the CirCor'22 dataset.
+![plot](./figures/rel_circor.png)
