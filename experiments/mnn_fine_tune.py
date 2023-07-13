@@ -35,11 +35,11 @@ TRANS_MAT_CKPT = os.path.join(BASE_CKPT, 'trans_mat_fold_0.npy')
 P_STATES_CKPT = os.path.join(BASE_CKPT, 'p_states_fold_0.npy')
 
 if args.hybrid:
-    train_step_fn = hmm_train_step_nn_only
-    logging.info('Using hybrid training.')
-else:
     train_step_fn = hmm_train_step
     logging.info('Using static training.')
+else:
+    train_step_fn = hmm_train_step_nn_only
+    logging.info('Using hybrid training.')
 
 mnn_type = 'HYBRID' if args.hybrid else 'STATIC'
 source, target = ('CIRCOR', 'PH16') if args.ph16 else ('PH16', 'CIRCOR')
