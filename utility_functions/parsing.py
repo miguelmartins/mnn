@@ -7,17 +7,17 @@ def get_supervised_parser():
                         '--number_folders',
                         type=int,
                         default=10,
-                        help='The number k of folds for cross-validation.')
+                        help='The number k of folds for cross-validation. Defaults to 10.')
     parser.add_argument('-e',
                         '--number-epochs',
                         type=int,
                         default=50,
-                        help='The number of train epochs per fold.')
+                        help='The number of train epochs per fold. Defaults to 50.')
     parser.add_argument('-lr',
                         '--learning_rate',
                         type=float,
                         default=1e-3,
-                        help='The learning rate for the Adam gradient descent optimizer.')
+                        help='The learning rate for the Adam gradient descent optimizer. Defaults to 1e-3.')
 
     parser.add_argument('--hybrid',
                         action='store_true',
@@ -37,26 +37,26 @@ def get_fine_tune_parser(default_model_dir: str):
                         '--number_folders',
                         type=int,
                         default=10,
-                        help='The number k of folds for cross-validation.')
+                        help='The number k of folds for cross-validation. Defaults to 10.')
     parser.add_argument('-e',
                         '--number-epochs',
                         type=int,
                         default=50,
-                        help='The number of train epochs per fold.')
+                        help='The number of train epochs per fold. Defaults to 50.')
     parser.add_argument('-lr',
                         '--learning_rate',
                         type=float,
                         default=1e-3,
-                        help='The learning rate for the Adam gradient descent optimizer.')
+                        help='The learning rate for the Adam gradient descent optimizer. Defaults to 1e-3.')
     parser.add_argument('-d',
                         '--model_directory',
                         type=str,
                         default=default_model_dir,
-                        help='The relative path where the MNN\'s pre-trained weights are stored.')
+                        help='The relative path where the MNN\'s pre-trained weights are stored. Uses weights of the models reported in IEEE JBHI publication as default.')
 
     parser.add_argument('--ph16',
                         action='store_true',
-                        help='Fine-tune to PhysioNet\'16.')
+                        help='Fine-tune to PhysioNet\'16. Default option.')
     parser.add_argument('--circor22',
                         dest='ph16',
                         action='store_false',
