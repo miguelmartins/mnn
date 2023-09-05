@@ -1,4 +1,4 @@
-[![License: GNU GPLv3](https://img.shields.io/badge/License-GNU_GPLv3-blue.svg)](https://opensource.org/license/gpl-3-0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 # Markov-based Neural Networks for Heart Sound Segmentation: Using Domain Knowledge in a principled way
 *Markov-based Neural Network* (MNN) 
 is a hybrid end-to-end framework that exploits Markov models as statistical inductive biases
