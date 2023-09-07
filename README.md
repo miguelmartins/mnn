@@ -13,6 +13,22 @@ and [CirCor DigiScope PhysioNet 2022 challenge dataset](https://moody-challenge.
 We also introduce a gradient-based unsupervised fine-tuning algorithm that effectively makes the MNN adaptive to unseen datum sampled from unknown distributions. We show that a pre-trained MNN can learn to fit an entirely new dataset in an unsupervised fashion with remarkable gains in performance.
 ![plot](figures/Flowchart_color.png)
 
+## Citation
+Our journal publication is available for early access at: https://ieeexplore.ieee.org/document/10242001. 
+```
+@ARTICLE{lmartins2023mnn,
+  author={Martins, Miguel L. and Coimbra, Miguel T. and Renna, Francesco},
+  journal={IEEE Journal of Biomedical and Health Informatics}, 
+  title={Markov-based Neural Networks for Heart Sound Segmentation: Using domain knowledge in a principled way}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1-12},
+  doi={10.1109/JBHI.2023.3312597}}
+
+```
+
+
 ## Recommended requirements
 1. Use anaconda/miniconda to create a __python 3.8.10__ virtual environment:
     ```zsh
